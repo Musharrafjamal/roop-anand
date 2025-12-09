@@ -2,9 +2,8 @@
 
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, User, Package } from "lucide-react";
+import { Pencil, Trash2, Package, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -15,52 +14,44 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 
-interface EmployeeProduct {
+interface Product {
   _id: string;
-  product: string;
-  quantity: number;
-}
-
-interface Employee {
-  _id: string;
-  fullName: string;
-  phoneNumber: string;
-  email?: string;
-  gender: "Male" | "Female" | "Other";
-  age: number;
-  dateOfJoining: string;
-  profilePhoto?: string;
-  status: "Online" | "Offline";
-  products?: EmployeeProduct[];
+  photo?: string;
+  title: string;
+  description?: string;
+  price: {
+    base: number;
+    lowestSellingPrice: number;
+  };
+  status: "Active" | "Inactive";
+  stockQuantity: number;
   createdAt: string;
   updatedAt: string;
 }
 
-interface EmployeeTableProps {
-  employees: Employee[];
-  onEdit: (employee: Employee) => void;
+interface ProductTableProps {
+  products: Product[];
+  onEdit: (product: Product) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, currentStatus: string) => void;
-  onAssignProducts: (employee: Employee) => void;
 }
 
-export function EmployeeTable({
-  employees,
+export function ProductTable({
+  products,
   onEdit,
   onDelete,
   onToggleStatus,
-  onAssignProducts,
-}: EmployeeTableProps) {
-  if (employees.length === 0) {
+}: ProductTableProps) {
+  if (products.length === 0) {
     return (
       <Card className="p-12 text-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
-            <User className="h-6 w-6 text-slate-400" />
+            <Package className="h-6 w-6 text-slate-400" />
           </div>
-          <p className="text-slate-600">No employees found</p>
+          <p className="text-slate-600">No products found</p>
           <p className="text-sm text-slate-500">
-            Click &quot;Add Employee&quot; to create your first employee record
+            Click &quot;Add Product&quot; to create your first product
           </p>
         </div>
       </Card>
@@ -79,25 +70,34 @@ export function EmployeeTable({
     }),
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
   return (
     <Card className="overflow-hidden border-0 shadow-lg">
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50 hover:bg-slate-50">
             <TableHead className="w-[80px]">Photo</TableHead>
-            <TableHead>Name</TableHead>
+            <TableHead>Title</TableHead>
             <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead className="hidden md:table-cell">Email</TableHead>
-            <TableHead className="hidden sm:table-cell">Products</TableHead>
-            <TableHead className="hidden lg:table-cell">Joined</TableHead>
+            <TableHead className="hidden md:table-cell">Base Price</TableHead>
+            <TableHead className="hidden md:table-cell">Min Price</TableHead>
+            <TableHead>Stock</TableHead>
+            <TableHead className="hidden lg:table-cell">Added</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employees.map((employee, index) => (
+          {products.map((product, index) => (
             <motion.tr
-              key={employee._id}
+              key={product._id}
               custom={index}
               variants={rowVariants}
               initial="hidden"
@@ -110,75 +110,81 @@ export function EmployeeTable({
                   transition={{ type: "spring", stiffness: 300 }}
                   className="relative"
                 >
-                  <Avatar className="h-10 w-10 ring-2 ring-white shadow-sm">
-                    {employee.profilePhoto ? (
-                      <AvatarImage
-                        src={employee.profilePhoto}
-                        alt={employee.fullName}
+                  <div className="h-12 w-12 rounded-lg overflow-hidden bg-slate-100 ring-2 ring-white shadow-sm flex items-center justify-center">
+                    {product.photo ? (
+                      <img
+                        src={product.photo}
+                        alt={product.title}
+                        className="w-full h-full object-cover"
                       />
-                    ) : null}
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-indigo-600 text-white font-medium">
-                      {employee.fullName
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                        .slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  {/* Status indicator on avatar */}
+                    ) : (
+                      <ImageOff className="h-5 w-5 text-slate-400" />
+                    )}
+                  </div>
+                  {/* Status indicator */}
                   <span
-                    className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
-                      employee.status === "Online"
+                    className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                      product.status === "Active"
                         ? "bg-green-500"
                         : "bg-slate-400"
                     }`}
                   />
                 </motion.div>
               </TableCell>
-              <TableCell className="font-medium text-slate-800">
-                {employee.fullName}
+              <TableCell>
+                <div>
+                  <p className="font-medium text-slate-800 line-clamp-1">
+                    {product.title}
+                  </p>
+                  {product.description && (
+                    <p className="text-xs text-slate-500 line-clamp-1">
+                      {product.description}
+                    </p>
+                  )}
+                </div>
               </TableCell>
               <TableCell>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => onToggleStatus(employee._id, employee.status)}
+                  onClick={() => onToggleStatus(product._id, product.status)}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
-                    employee.status === "Online"
+                    product.status === "Active"
                       ? "bg-green-100 text-green-700 hover:bg-green-200"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      employee.status === "Online"
+                      product.status === "Active"
                         ? "bg-green-500"
                         : "bg-slate-400"
                     }`}
                   />
-                  {employee.status}
+                  {product.status}
                 </motion.button>
               </TableCell>
-              <TableCell className="text-slate-600">
-                {employee.phoneNumber}
+              <TableCell className="hidden md:table-cell text-slate-600 font-medium">
+                {formatCurrency(product.price.base)}
               </TableCell>
               <TableCell className="hidden md:table-cell text-slate-500">
-                {employee.email || "—"}
+                {formatCurrency(product.price.lowestSellingPrice)}
               </TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onAssignProducts(employee)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 cursor-pointer transition-colors"
+              <TableCell>
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    product.stockQuantity === 0
+                      ? "bg-red-100 text-red-700"
+                      : product.stockQuantity < 10
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-blue-100 text-blue-700"
+                  }`}
                 >
-                  <Package className="h-3 w-3" />
-                  {employee.products?.length || 0} items
-                </motion.button>
+                  {product.stockQuantity}
+                </span>
               </TableCell>
               <TableCell className="hidden lg:table-cell text-slate-500">
-                {format(new Date(employee.dateOfJoining), "MMM d, yyyy")}
+                {format(new Date(product.createdAt), "MMM d, yyyy")}
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
@@ -189,21 +195,7 @@ export function EmployeeTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onAssignProducts(employee)}
-                      title="Assign products"
-                      className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
-                    >
-                      <Package className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(employee)}
+                      onClick={() => onEdit(product)}
                       className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
                     >
                       <Pencil className="h-4 w-4" />
@@ -216,7 +208,7 @@ export function EmployeeTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onDelete(employee._id)}
+                      onClick={() => onDelete(product._id)}
                       className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />

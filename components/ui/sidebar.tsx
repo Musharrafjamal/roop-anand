@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Users,
-  ClipboardList,
+  Package,
   FileBarChart,
   LogOut,
   ChevronLeft,
@@ -36,7 +36,7 @@ const navItems = [
   {
     title: "Stock Records",
     href: "/admin/stock",
-    icon: ClipboardList,
+    icon: Package,
   },
   {
     title: "Reports",

@@ -1,4 +1,11 @@
-import mongoose, { Schema, Model, Document } from "mongoose";
+import mongoose, { Schema, Model, Document, Types } from "mongoose";
+
+export interface IEmployeeProduct {
+  _id?: Types.ObjectId;
+  product: Types.ObjectId;
+  quantity: number;
+  assignedAt: Date;
+}
 
 export interface IEmployee extends Document {
   fullName: string;
@@ -10,9 +17,30 @@ export interface IEmployee extends Document {
   password: string;
   profilePhoto?: string;
   status: "Online" | "Offline";
+  products: IEmployeeProduct[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const EmployeeProductSchema = new Schema<IEmployeeProduct>(
+  {
+    product: {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: [1, "Quantity must be at least 1"],
+    },
+    assignedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: true }
+);
 
 const EmployeeSchema = new Schema<IEmployee>(
   {
@@ -61,6 +89,10 @@ const EmployeeSchema = new Schema<IEmployee>(
       type: String,
       enum: ["Online", "Offline"],
       default: "Offline",
+    },
+    products: {
+      type: [EmployeeProductSchema],
+      default: [],
     },
   },
   {
