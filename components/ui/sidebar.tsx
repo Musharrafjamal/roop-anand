@@ -110,8 +110,6 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Footer */}
       <div className="p-2 border-t border-neutral-200">
-        <Separator className="mb-2" />
-
         {/* User Info */}
         {!collapsed && session?.user && (
           <div className="flex items-center gap-3 px-3 py-2 mb-2">

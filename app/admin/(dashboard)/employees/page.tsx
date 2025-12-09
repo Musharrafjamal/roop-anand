@@ -2,9 +2,24 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, Loader2, Users } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Loader2,
+  Users,
+  Filter,
+  ArrowUpDown,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -24,9 +39,14 @@ interface Employee {
   age: number;
   dateOfJoining: string;
   profilePhoto?: string;
+  status: "Online" | "Offline";
   createdAt: string;
   updatedAt: string;
 }
+
+type SortField = "createdAt" | "age" | "fullName";
+type SortOrder = "asc" | "desc";
+type StatusFilter = "all" | "Online" | "Offline";
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -35,6 +55,12 @@ export default function EmployeesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Filter and Sort states
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortField, setSortField] = useState<SortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchEmployees = useCallback(async () => {
     try {
@@ -67,7 +93,6 @@ export default function EmployeesPage() {
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    // Delay resetting editingEmployee for smooth exit animation
     setTimeout(() => {
       setEditingEmployee(null);
     }, 200);
@@ -85,6 +110,22 @@ export default function EmployeesPage() {
       }
     } catch (error) {
       console.error("Error deleting employee:", error);
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === "Online" ? "Offline" : "Online";
+    try {
+      const res = await fetch(`/api/employees/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        fetchEmployees();
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
   };
 
@@ -117,12 +158,56 @@ export default function EmployeesPage() {
     }
   };
 
-  const filteredEmployees = employees.filter(
-    (emp) =>
-      emp.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      emp.phoneNumber.includes(searchQuery) ||
-      (emp.email && emp.email.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Filter and sort employees
+  const filteredAndSortedEmployees = employees
+    .filter((emp) => {
+      // Search filter
+      const matchesSearch =
+        emp.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        emp.phoneNumber.includes(searchQuery) ||
+        (emp.email &&
+          emp.email.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      // Status filter
+      const matchesStatus =
+        statusFilter === "all" || emp.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortField) {
+        case "createdAt":
+          comparison =
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case "age":
+          comparison = a.age - b.age;
+          break;
+        case "fullName":
+          comparison = a.fullName.localeCompare(b.fullName);
+          break;
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+  const onlineCount = employees.filter((e) => e.status === "Online").length;
+  const offlineCount = employees.filter((e) => e.status === "Offline").length;
+
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setSortField("createdAt");
+    setSortOrder("desc");
+    setSearchQuery("");
+  };
+
+  const hasActiveFilters =
+    statusFilter !== "all" ||
+    sortField !== "createdAt" ||
+    sortOrder !== "desc" ||
+    searchQuery;
 
   return (
     <motion.div
@@ -141,14 +226,30 @@ export default function EmployeesPage() {
         >
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Employees</h1>
-            <p className="text-slate-600 mt-1">
-              Manage your employee records
+            <div className="flex items-center gap-4 mt-1">
+              <p className="text-slate-600">
+                Manage your employee records
+                {employees.length > 0 && (
+                  <span className="ml-2 text-indigo-600 font-medium">
+                    ({employees.length} total)
+                  </span>
+                )}
+              </p>
               {employees.length > 0 && (
-                <span className="ml-2 text-indigo-600 font-medium">
-                  ({employees.length} total)
-                </span>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-slate-600">{onlineCount} Online</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    <span className="text-slate-600">
+                      {offlineCount} Offline
+                    </span>
+                  </span>
+                </div>
               )}
-            </p>
+            </div>
           </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
@@ -161,22 +262,130 @@ export default function EmployeesPage() {
           </motion.div>
         </motion.div>
 
-        {/* Search */}
+        {/* Search and Filters */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="mb-6"
+          className="mb-6 space-y-4"
         >
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Search by name, phone, or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 transition-all focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
-            />
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search by name, phone, or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 transition-all focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
+              />
+            </div>
+
+            {/* Filter Toggle Button */}
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className={`gap-2 ${
+                showFilters ? "bg-indigo-50 border-indigo-300" : ""
+              }`}
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+              {hasActiveFilters && (
+                <span className="ml-1 w-2 h-2 rounded-full bg-indigo-600"></span>
+              )}
+            </Button>
           </div>
+
+          {/* Expanded Filters */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="flex flex-wrap items-center gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                  {/* Status Filter */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 font-medium">
+                      Status:
+                    </span>
+                    <Select
+                      value={statusFilter}
+                      onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+                    >
+                      <SelectTrigger className="w-32 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="Online">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            Online
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="Offline">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                            Offline
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Sort By */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 font-medium">
+                      Sort by:
+                    </span>
+                    <Select
+                      value={sortField}
+                      onValueChange={(v) => setSortField(v as SortField)}
+                    >
+                      <SelectTrigger className="w-36 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="createdAt">Date Added</SelectItem>
+                        <SelectItem value="age">Age</SelectItem>
+                        <SelectItem value="fullName">Name</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Sort Order */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                    }
+                    className="gap-2"
+                  >
+                    <ArrowUpDown className="h-4 w-4" />
+                    {sortOrder === "asc" ? "Ascending" : "Descending"}
+                  </Button>
+
+                  {/* Clear Filters */}
+                  {hasActiveFilters && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="gap-1 text-slate-500 hover:text-slate-700"
+                    >
+                      <X className="h-4 w-4" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* Table */}
@@ -192,7 +401,8 @@ export default function EmployeesPage() {
               <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
               <p className="text-slate-500">Loading employees...</p>
             </motion.div>
-          ) : filteredEmployees.length === 0 && searchQuery ? (
+          ) : filteredAndSortedEmployees.length === 0 &&
+            (searchQuery || statusFilter !== "all") ? (
             <motion.div
               key="no-results"
               initial={{ opacity: 0, y: 20 }}
@@ -203,10 +413,13 @@ export default function EmployeesPage() {
               <Search className="h-12 w-12 text-slate-300 mb-4" />
               <p className="text-slate-600 text-lg">No employees found</p>
               <p className="text-slate-400 text-sm">
-                Try a different search term
+                Try different filters or search term
               </p>
+              <Button variant="outline" onClick={clearFilters} className="mt-4">
+                Clear Filters
+              </Button>
             </motion.div>
-          ) : filteredEmployees.length === 0 ? (
+          ) : employees.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, y: 20 }}
@@ -240,9 +453,10 @@ export default function EmployeesPage() {
               transition={{ duration: 0.3 }}
             >
               <EmployeeTable
-                employees={filteredEmployees}
+                employees={filteredAndSortedEmployees}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onToggleStatus={handleToggleStatus}
               />
             </motion.div>
           )}

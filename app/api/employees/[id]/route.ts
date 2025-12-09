@@ -70,6 +70,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       dateOfJoining,
       password,
       profilePhoto,
+      status,
     } = body;
 
     // Check if phone number is being changed and if it already exists
@@ -103,6 +104,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       age,
       dateOfJoining: dateOfJoining ? new Date(dateOfJoining) : undefined,
       profilePhoto: profilePhoto || undefined,
+      status,
     };
 
     // If profilePhoto is explicitly set to empty/null, remove it

@@ -33,6 +33,7 @@ interface Employee {
   age: number;
   dateOfJoining: string;
   profilePhoto?: string;
+  status: "Online" | "Offline";
 }
 
 interface EmployeeFormProps {
@@ -59,6 +60,7 @@ export function EmployeeForm({
     dateOfJoining: "",
     password: "",
     confirmPassword: "",
+    status: "Offline" as "Online" | "Offline",
   });
 
   // Separate state for photo management
@@ -94,6 +96,7 @@ export function EmployeeForm({
           : "",
         password: "",
         confirmPassword: "",
+        status: employee.status || "Offline",
       });
       setExistingPhoto(employee.profilePhoto || "");
       setLocalPreview("");
@@ -110,6 +113,7 @@ export function EmployeeForm({
         dateOfJoining: "",
         password: "",
         confirmPassword: "",
+        status: "Offline",
       });
       setExistingPhoto("");
       setLocalPreview("");
@@ -218,6 +222,7 @@ export function EmployeeForm({
       dateOfJoining: formData.dateOfJoining,
       profilePhoto: profilePhotoUrl,
       password: formData.password || undefined,
+      status: formData.status,
     });
   };
 
@@ -436,6 +441,49 @@ export function EmployeeForm({
           required
           className="transition-all focus:ring-2 focus:ring-indigo-200"
         />
+      </motion.div>
+
+      {/* Status */}
+      <motion.div variants={itemVariants} className="space-y-2">
+        <Label>Status</Label>
+        <div className="flex gap-3">
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => handleChange("status", "Online")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border-2 transition-all ${
+              formData.status === "Online"
+                ? "border-green-500 bg-green-50 text-green-700"
+                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+            }`}
+          >
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${
+                formData.status === "Online" ? "bg-green-500" : "bg-slate-300"
+              }`}
+            />
+            Online
+          </motion.button>
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => handleChange("status", "Offline")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border-2 transition-all ${
+              formData.status === "Offline"
+                ? "border-slate-500 bg-slate-50 text-slate-700"
+                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+            }`}
+          >
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${
+                formData.status === "Offline" ? "bg-slate-500" : "bg-slate-300"
+              }`}
+            />
+            Offline
+          </motion.button>
+        </div>
       </motion.div>
 
       {/* Password Section */}

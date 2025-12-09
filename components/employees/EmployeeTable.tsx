@@ -24,6 +24,7 @@ interface Employee {
   age: number;
   dateOfJoining: string;
   profilePhoto?: string;
+  status: "Online" | "Offline";
   createdAt: string;
   updatedAt: string;
 }
@@ -32,12 +33,14 @@ interface EmployeeTableProps {
   employees: Employee[];
   onEdit: (employee: Employee) => void;
   onDelete: (id: string) => void;
+  onToggleStatus: (id: string, currentStatus: string) => void;
 }
 
 export function EmployeeTable({
   employees,
   onEdit,
   onDelete,
+  onToggleStatus,
 }: EmployeeTableProps) {
   if (employees.length === 0) {
     return (
@@ -74,6 +77,7 @@ export function EmployeeTable({
           <TableRow className="bg-slate-50 hover:bg-slate-50">
             <TableHead className="w-[80px]">Photo</TableHead>
             <TableHead>Name</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
             <TableHead>Phone</TableHead>
             <TableHead className="hidden md:table-cell">Email</TableHead>
             <TableHead className="hidden sm:table-cell">Gender</TableHead>
@@ -96,6 +100,7 @@ export function EmployeeTable({
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   transition={{ type: "spring", stiffness: 300 }}
+                  className="relative"
                 >
                   <Avatar className="h-10 w-10 ring-2 ring-white shadow-sm">
                     {employee.profilePhoto ? (
@@ -113,10 +118,39 @@ export function EmployeeTable({
                         .slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
+                  {/* Status indicator on avatar */}
+                  <span
+                    className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                      employee.status === "Online"
+                        ? "bg-green-500"
+                        : "bg-slate-400"
+                    }`}
+                  />
                 </motion.div>
               </TableCell>
               <TableCell className="font-medium text-slate-800">
                 {employee.fullName}
+              </TableCell>
+              <TableCell>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onToggleStatus(employee._id, employee.status)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
+                    employee.status === "Online"
+                      ? "bg-green-100 text-green-700 hover:bg-green-200"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      employee.status === "Online"
+                        ? "bg-green-500"
+                        : "bg-slate-400"
+                    }`}
+                  />
+                  {employee.status}
+                </motion.button>
               </TableCell>
               <TableCell className="text-slate-600">
                 {employee.phoneNumber}

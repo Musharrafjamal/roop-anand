@@ -9,6 +9,7 @@ export interface IEmployee extends Document {
   dateOfJoining: Date;
   password: string;
   profilePhoto?: string;
+  status: "Online" | "Offline";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -55,6 +56,11 @@ const EmployeeSchema = new Schema<IEmployee>(
     profilePhoto: {
       type: String,
       default: undefined,
+    },
+    status: {
+      type: String,
+      enum: ["Online", "Offline"],
+      default: "Offline",
     },
   },
   {
