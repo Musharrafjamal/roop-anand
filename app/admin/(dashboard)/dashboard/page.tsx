@@ -1,58 +1,21 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  LogOut,
-  User,
-  Loader2,
-  Users,
-  FileBarChart,
-  ClipboardList,
-} from "lucide-react";
+import { User, Users, ClipboardList, FileBarChart } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await signOut({ redirect: false });
-    router.push("/admin/login");
-  };
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    router.push("/admin/login");
-    return null;
-  }
+  const { data: session } = useSession();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-slate-600">Employee Stock Management System</p>
-          </div>
-          <Button
-            variant="destructive"
-            onClick={handleLogout}
-            className="gap-2"
-          >
-            <LogOut className="w-5 h-5" />
-            Logout
-          </Button>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">
+            Admin Dashboard
+          </h1>
+          <p className="text-slate-600">Employee Stock Management System</p>
         </div>
 
         <Card className="shadow-xl mb-8 border-0">
@@ -65,19 +28,17 @@ export default function AdminDashboard() {
                 <h2 className="text-2xl font-semibold text-slate-800">
                   Welcome back!
                 </h2>
-                <p className="text-slate-600">{session.user?.email}</p>
+                <p className="text-slate-600">{session?.user?.email}</p>
               </div>
             </div>
             <div className="border-t pt-6">
               <p className="text-slate-700 mb-4">
-                You are successfully logged in to the admin panel using
-                NextAuth.js.
+                You are successfully logged in to the admin panel.
               </p>
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="text-green-800 text-sm">
                   <strong>✓ Protected Route:</strong> This page is only
-                  accessible to authenticated admin users. All /admin/* routes
-                  (except login, forgot-password, reset-password) are protected.
+                  accessible to authenticated admin users.
                 </p>
               </div>
             </div>
@@ -85,21 +46,23 @@ export default function AdminDashboard() {
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="shadow-lg hover:shadow-xl transition-shadow border-0 cursor-pointer hover:scale-105 transform transition-transform">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-blue-600" />
+          <Link href="/admin/employees">
+            <Card className="shadow-lg hover:shadow-xl transition-shadow border-0 cursor-pointer hover:scale-105 transform transition-transform">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-800">
+                    Employees
+                  </h3>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-800">
-                  Employees
-                </h3>
-              </div>
-              <p className="text-slate-600 text-sm">
-                Manage employee data and stock allocations
-              </p>
-            </CardContent>
-          </Card>
+                <p className="text-slate-600 text-sm">
+                  Manage employee data and stock allocations
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="shadow-lg hover:shadow-xl transition-shadow border-0 cursor-pointer hover:scale-105 transform transition-transform">
             <CardContent className="p-6">

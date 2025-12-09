@@ -1,0 +1,35 @@
+"use client";
+
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { Sidebar } from "@/components/ui/sidebar";
+
+export default function AdminDashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { status } = useSession();
+  const router = useRouter();
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    router.push("/admin/login");
+    return null;
+  }
+
+  return (
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Sidebar />
+      <main className="flex-1 overflow-auto">{children}</main>
+    </div>
+  );
+}
