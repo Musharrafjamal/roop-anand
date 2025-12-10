@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Users, ClipboardList, FileBarChart } from "lucide-react";
+import { User, Users, Package, FileBarChart } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
@@ -47,7 +47,7 @@ export default function AdminDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link href="/admin/employees">
-            <Card className="shadow-lg hover:shadow-xl transition-shadow border-0 cursor-pointer hover:scale-105 transform transition-transform">
+            <Card className="shadow-lg hover:shadow-xl border-0 cursor-pointer hover:scale-105 transform transition-all">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -64,23 +64,25 @@ export default function AdminDashboard() {
             </Card>
           </Link>
 
-          <Card className="shadow-lg hover:shadow-xl transition-shadow border-0 cursor-pointer hover:scale-105 transform transition-transform">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <ClipboardList className="w-5 h-5 text-green-600" />
+          <Link href="/admin/stock">
+            <Card className="shadow-lg hover:shadow-xl border-0 cursor-pointer hover:scale-105 transform transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Package className="w-5 h-5 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-800">
+                    Stock Records
+                  </h3>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-800">
-                  Stock Records
-                </h3>
-              </div>
-              <p className="text-slate-600 text-sm">
-                View and manage stock distribution
-              </p>
-            </CardContent>
-          </Card>
+                <p className="text-slate-600 text-sm">
+                  View and manage stock distribution
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="shadow-lg hover:shadow-xl transition-shadow border-0 cursor-pointer hover:scale-105 transform transition-transform">
+          <Card className="shadow-lg hover:shadow-xl border-0 cursor-pointer hover:scale-105 transform transition-all opacity-60">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -91,7 +93,7 @@ export default function AdminDashboard() {
                 </h3>
               </div>
               <p className="text-slate-600 text-sm">
-                Generate and export reports
+                Generate and export reports (Coming Soon)
               </p>
             </CardContent>
           </Card>

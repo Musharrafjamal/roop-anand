@@ -20,9 +20,9 @@ export async function middleware(request: NextRequest) {
 
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
 
-  // If trying to access login while already authenticated, redirect to dashboard
+  // If trying to access login while already authenticated, redirect to admin dashboard
   if (isPublicPath && token) {
-    return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+    return NextResponse.redirect(new URL('/admin', request.url));
   }
 
   // If trying to access protected route without authentication, redirect to login

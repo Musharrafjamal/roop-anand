@@ -15,7 +15,7 @@ export default function AdminDashboardLayout({
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
       </div>
     );
@@ -27,7 +27,7 @@ export default function AdminDashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 overflow-auto">{children}</main>
     </div>

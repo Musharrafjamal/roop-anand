@@ -249,7 +249,7 @@ export default function StockPage() {
         >
           <div>
             <h1 className="text-3xl font-bold text-slate-800">
-              Stock Management
+              Products Management
             </h1>
             <div className="flex flex-wrap items-center gap-4 mt-1">
               <p className="text-slate-600">

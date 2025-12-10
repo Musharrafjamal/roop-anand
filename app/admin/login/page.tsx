@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
       }
 
       // Redirect to admin dashboard on success
-      router.push("/admin/dashboard");
+      router.push("/admin");
       router.refresh();
     } catch (err) {
       console.error("Login error:", err);

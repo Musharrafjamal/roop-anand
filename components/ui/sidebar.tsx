@@ -25,7 +25,7 @@ interface SidebarProps {
 const navItems = [
   {
     title: "Dashboard",
-    href: "/admin/dashboard",
+    href: "/admin",
     icon: LayoutDashboard,
   },
   {
@@ -34,13 +34,13 @@ const navItems = [
     icon: Users,
   },
   {
-    title: "Stock Records",
-    href: "/admin/stock",
+    title: "Products",
+    href: "/admin/products",
     icon: Package,
   },
   {
-    title: "Reports",
-    href: "/admin/reports",
+    title: "Sales",
+    href: "/admin/sales",
     icon: FileBarChart,
   },
 ];
