@@ -107,7 +107,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const employee = await Employee.findById(id)
       .populate("products.product")
-      .select("fullName products");
+      .select("-password");
 
     if (!employee) {
       return NextResponse.json(

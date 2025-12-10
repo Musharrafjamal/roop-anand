@@ -2,7 +2,8 @@
 
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, User, Package } from "lucide-react";
+import { Pencil, Trash2, User, Package, Eye } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -182,6 +183,21 @@ export function EmployeeTable({
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Link href={`/admin/employees/${employee._id}`}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="View details"
+                        className="h-8 w-8 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </motion.div>
                   <motion.div
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}

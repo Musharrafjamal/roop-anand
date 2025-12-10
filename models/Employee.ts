@@ -7,6 +7,12 @@ export interface IEmployeeProduct {
   assignedAt: Date;
 }
 
+export interface IHoldings {
+  cash: number;
+  online: number;
+  total: number;
+}
+
 export interface IEmployee extends Document {
   fullName: string;
   phoneNumber: string;
@@ -18,6 +24,7 @@ export interface IEmployee extends Document {
   profilePhoto?: string;
   status: "Online" | "Offline";
   products: IEmployeeProduct[];
+  holdings: IHoldings;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -93,6 +100,23 @@ const EmployeeSchema = new Schema<IEmployee>(
     products: {
       type: [EmployeeProductSchema],
       default: [],
+    },
+    holdings: {
+      cash: {
+        type: Number,
+        default: 0,
+        min: [0, "Cash holdings cannot be negative"],
+      },
+      online: {
+        type: Number,
+        default: 0,
+        min: [0, "Online holdings cannot be negative"],
+      },
+      total: {
+        type: Number,
+        default: 0,
+        min: [0, "Total holdings cannot be negative"],
+      },
     },
   },
   {

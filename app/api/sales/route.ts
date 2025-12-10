@@ -163,6 +163,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Update employee holdings based on payment method
+    if (!employee.holdings) {
+      employee.holdings = { cash: 0, online: 0, total: 0 };
+    }
+
+    if (paymentMethod === "Cash") {
+      employee.holdings.cash += totalAmount;
+    } else {
+      employee.holdings.online += totalAmount;
+    }
+    employee.holdings.total += totalAmount;
+
     await employee.save();
 
     // Populate and return the sale
