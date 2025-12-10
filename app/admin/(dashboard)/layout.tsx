@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Sidebar } from "@/components/ui/sidebar";
+import { Toaster } from "sonner";
 
 export default function AdminDashboardLayout({
   children,
@@ -30,6 +31,7 @@ export default function AdminDashboardLayout({
     <div className="flex min-h-screen max-h-screen">
       <Sidebar />
       <main className="flex-1 overflow-auto">{children}</main>
+      <Toaster richColors position="top-right" />
     </div>
   );
 }

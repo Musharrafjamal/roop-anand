@@ -11,6 +11,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,11 @@ const navItems = [
     title: "Sales",
     href: "/admin/sales",
     icon: FileBarChart,
+  },
+  {
+    title: "Requests",
+    href: "/admin/requests",
+    icon: ClipboardList,
   },
 ];
 
