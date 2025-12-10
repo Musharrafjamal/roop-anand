@@ -117,7 +117,7 @@ export function EmployeeTable({
                         alt={employee.fullName}
                       />
                     ) : null}
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-indigo-600 text-white font-medium">
+                    <AvatarFallback className="bg-indigo-500 text-white font-medium">
                       {employee.fullName
                         .split(" ")
                         .map((n) => n[0])

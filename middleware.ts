@@ -11,6 +11,15 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  // Handle home route - redirect based on authentication
+  if (pathname === '/') {
+    if (token) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    } else {
+      return NextResponse.redirect(new URL('/admin/login', request.url));
+    }
+  }
+
   // Public paths that don't require authentication
   const publicPaths = [
     '/admin/login',
@@ -36,5 +45,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/', '/admin/:path*'],
 };
