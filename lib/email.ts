@@ -96,3 +96,75 @@ export async function sendPasswordResetEmail(email: string, resetToken: string):
     throw new Error('Failed to send password reset email');
   }
 }
+
+/**
+ * Send an OTP email to a mobile user for password reset
+ */
+export async function sendOTPEmail(email: string, otp: string): Promise<void> {
+  const transporter = createTransporter();
+
+  const mailOptions = {
+    from: EMAIL_FROM,
+    to: email,
+    subject: 'Password Reset OTP - Employee Stock Management',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .container {
+              background-color: #f9f9f9;
+              border-radius: 8px;
+              padding: 30px;
+            }
+            .otp-box {
+              background-color: #0070f3;
+              color: white;
+              font-size: 32px;
+              font-weight: bold;
+              letter-spacing: 8px;
+              padding: 20px 30px;
+              border-radius: 8px;
+              text-align: center;
+              margin: 20px 0;
+            }
+            .footer {
+              margin-top: 30px;
+              font-size: 12px;
+              color: #666;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h2>Password Reset OTP</h2>
+            <p>Hello,</p>
+            <p>You requested to reset your password. Use the following OTP to verify your identity:</p>
+            <div class="otp-box">${otp}</div>
+            <p>This OTP will expire in <strong>10 minutes</strong>.</p>
+            <p>If you didn't request this, please ignore this email.</p>
+            <div class="footer">
+              <p>This is an automated email. Please do not reply.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Error sending OTP email:', error);
+    throw new Error('Failed to send OTP email');
+  }
+}

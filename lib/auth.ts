@@ -22,3 +22,10 @@ export async function comparePassword(password: string, hashedPassword: string):
 export function generateResetToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
+
+/**
+ * Generate a 4-digit OTP for password reset
+ */
+export function generateOTP(): string {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+}

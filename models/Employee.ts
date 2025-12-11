@@ -25,6 +25,8 @@ export interface IEmployee extends Document {
   status: "Online" | "Offline";
   products: IEmployeeProduct[];
   holdings: IHoldings;
+  otp?: string;
+  otpExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -117,6 +119,14 @@ const EmployeeSchema = new Schema<IEmployee>(
         default: 0,
         min: [0, "Total holdings cannot be negative"],
       },
+    },
+    otp: {
+      type: String,
+      default: undefined,
+    },
+    otpExpiry: {
+      type: Date,
+      default: undefined,
     },
   },
   {
