@@ -393,6 +393,348 @@ const getProfile = async () => {
 
 ---
 
+### 6. Update Status (Protected)
+
+Update the current user's online/offline status. **Requires authentication.**
+
+**Endpoint:** `PATCH /profile/status`
+
+**Headers:**
+
+```
+Authorization: Bearer <your_jwt_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "status": "Online"
+}
+```
+
+| Field    | Type   | Required | Description                              |
+| -------- | ------ | -------- | ---------------------------------------- |
+| `status` | string | Yes      | Must be either `"Online"` or `"Offline"` |
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Status updated to Online",
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "status": "Online"
+  }
+}
+```
+
+**Error Responses:**
+
+Invalid Status (400):
+
+```json
+{
+  "success": false,
+  "message": "Invalid status. Must be \"Online\" or \"Offline\""
+}
+```
+
+Unauthorized (401):
+
+```json
+{
+  "success": false,
+  "message": "Authorization header is required"
+}
+```
+
+**Usage Example:**
+
+```javascript
+const updateStatus = async (status) => {
+  const token = await AsyncStorage.getItem("authToken");
+
+  const response = await fetch(
+    "http://localhost:3030/api/mobile/profile/status",
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (data.success) {
+    return data.user;
+  } else {
+    throw new Error(data.message);
+  }
+};
+
+// Usage
+await updateStatus("Online"); // When app comes to foreground
+await updateStatus("Offline"); // When app goes to background or user logs out
+```
+
+---
+
+### 7. Change Password (Protected)
+
+Change the current user's password while logged in. **Requires authentication.**
+
+**Endpoint:** `PATCH /profile/password`
+
+**Headers:**
+
+```
+Authorization: Bearer <your_jwt_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "currentPassword": "oldPassword123",
+  "newPassword": "newSecurePassword456"
+}
+```
+
+| Field             | Type   | Required | Description                         |
+| ----------------- | ------ | -------- | ----------------------------------- |
+| `currentPassword` | string | Yes      | User's current password             |
+| `newPassword`     | string | Yes      | New password (minimum 6 characters) |
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+```
+
+**Error Responses:**
+
+Missing Fields (400):
+
+```json
+{
+  "success": false,
+  "message": "Current password and new password are required"
+}
+```
+
+Password Too Short (400):
+
+```json
+{
+  "success": false,
+  "message": "New password must be at least 6 characters"
+}
+```
+
+Same Password (400):
+
+```json
+{
+  "success": false,
+  "message": "New password must be different from current password"
+}
+```
+
+Wrong Current Password (401):
+
+```json
+{
+  "success": false,
+  "message": "Current password is incorrect"
+}
+```
+
+**Usage Example:**
+
+```javascript
+const changePassword = async (currentPassword, newPassword) => {
+  const token = await AsyncStorage.getItem("authToken");
+
+  const response = await fetch(
+    "http://localhost:3030/api/mobile/profile/password",
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (data.success) {
+    // Optionally show success message and navigate back
+    return true;
+  } else {
+    throw new Error(data.message);
+  }
+};
+```
+
+---
+
+### 8. Update Profile Photo (Protected)
+
+Update or remove the current user's profile photo. **Requires authentication.**
+
+> **Note:** The mobile app should first upload the image to UploadThing (or your preferred storage), then send the resulting URL to this endpoint.
+
+**Endpoint:** `PATCH /profile/photo`
+
+**Headers:**
+
+```
+Authorization: Bearer <your_jwt_token>
+Content-Type: application/json
+```
+
+**Request Body (Update Photo):**
+
+```json
+{
+  "profilePhoto": "https://utfs.io/f/abc123..."
+}
+```
+
+**Request Body (Remove Photo):**
+
+```json
+{
+  "profilePhoto": ""
+}
+```
+
+| Field          | Type   | Required | Description                                                 |
+| -------------- | ------ | -------- | ----------------------------------------------------------- |
+| `profilePhoto` | string | Yes      | URL of the uploaded image, or empty string to remove photo. |
+
+**Success Response (200) - Photo Updated:**
+
+```json
+{
+  "success": true,
+  "message": "Profile photo updated successfully",
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "profilePhoto": "https://utfs.io/f/abc123..."
+  }
+}
+```
+
+**Success Response (200) - Photo Removed:**
+
+```json
+{
+  "success": true,
+  "message": "Profile photo removed successfully",
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "profilePhoto": null
+  }
+}
+```
+
+**Error Responses:**
+
+Missing Field (400):
+
+```json
+{
+  "success": false,
+  "message": "profilePhoto field is required. Send empty string to remove photo."
+}
+```
+
+**Usage Example:**
+
+```javascript
+// Using react-native-image-picker and uploadthing
+import { launchImageLibrary } from "react-native-image-picker";
+
+const updateProfilePhoto = async () => {
+  const token = await AsyncStorage.getItem("authToken");
+
+  // Step 1: Pick image
+  const result = await launchImageLibrary({
+    mediaType: "photo",
+    quality: 0.8,
+  });
+
+  if (result.didCancel || !result.assets?.[0]) return;
+
+  const image = result.assets[0];
+
+  // Step 2: Upload to your storage (e.g., UploadThing, S3, etc.)
+  // This depends on your upload implementation
+  const uploadedUrl = await uploadImageToStorage(image);
+
+  // Step 3: Update profile with the URL
+  const response = await fetch(
+    "http://localhost:3030/api/mobile/profile/photo",
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ profilePhoto: uploadedUrl }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (data.success) {
+    return data.user;
+  } else {
+    throw new Error(data.message);
+  }
+};
+
+// Remove profile photo
+const removeProfilePhoto = async () => {
+  const token = await AsyncStorage.getItem("authToken");
+
+  const response = await fetch(
+    "http://localhost:3030/api/mobile/profile/photo",
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ profilePhoto: "" }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (data.success) {
+    return data.user;
+  } else {
+    throw new Error(data.message);
+  }
+};
+```
+
+---
+
 ## Password Reset Flow
 
 ```
