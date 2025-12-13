@@ -20,17 +20,25 @@ export async function GET(request: NextRequest) {
     const { user } = auth;
     await dbConnect();
 
-    // Get query params for filtering
+    // Get query params for filtering and pagination
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const page = parseInt(searchParams.get('page') || '1');
+    const skip = (page - 1) * limit;
 
     const query: Record<string, unknown> = { employee: user.id };
     if (status && status !== 'all') {
       query.status = status;
     }
 
+    // Get total count for pagination
+    const totalCount = await MoneyRequest.countDocuments(query);
+
     const requests = await MoneyRequest.find(query)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     // Transform response
     const formattedRequests = requests.map((req) => ({
@@ -47,6 +55,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       requests: formattedRequests,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasMore: skip + requests.length < totalCount,
+      },
     });
   } catch (error) {
     console.error('Money requests fetch error:', error);

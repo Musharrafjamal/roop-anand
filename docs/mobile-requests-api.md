@@ -57,19 +57,21 @@ Authorization: Bearer <token>
 
 ### GET /api/mobile/requests/stock
 
-Fetch all stock requests for the authenticated employee.
+Fetch all stock requests for the authenticated employee with pagination.
 
 **Query Parameters:**
 
-| Parameter | Type   | Required | Description                                                   |
-| --------- | ------ | -------- | ------------------------------------------------------------- |
-| status    | string | No       | Filter by status: `Pending`, `Approved`, `Rejected`, or `all` |
+| Parameter | Type   | Default | Description                                                   |
+| --------- | ------ | ------- | ------------------------------------------------------------- |
+| status    | string | -       | Filter by status: `Pending`, `Approved`, `Rejected`, or `all` |
+| page      | number | 1       | Page number for pagination                                    |
+| limit     | number | 20      | Number of records per page                                    |
 
 **Example Request:**
 
 ```typescript
 const response = await fetch(
-  "https://your-domain.com/api/mobile/requests/stock?status=Pending",
+  "https://your-domain.com/api/mobile/requests/stock?status=Pending&page=1&limit=10",
   {
     method: "GET",
     headers: {
@@ -103,7 +105,14 @@ const response = await fetch(
       "createdAt": "2025-01-15T10:30:00.000Z",
       "processedAt": null
     }
-  ]
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "totalCount": 25,
+    "totalPages": 3,
+    "hasMore": true
+  }
 }
 ```
 
@@ -183,19 +192,21 @@ const response = await fetch(
 
 ### GET /api/mobile/requests/money
 
-Fetch all money requests for the authenticated employee.
+Fetch all money requests for the authenticated employee with pagination.
 
 **Query Parameters:**
 
-| Parameter | Type   | Required | Description                                                   |
-| --------- | ------ | -------- | ------------------------------------------------------------- |
-| status    | string | No       | Filter by status: `Pending`, `Approved`, `Rejected`, or `all` |
+| Parameter | Type   | Default | Description                                                   |
+| --------- | ------ | ------- | ------------------------------------------------------------- |
+| status    | string | -       | Filter by status: `Pending`, `Approved`, `Rejected`, or `all` |
+| page      | number | 1       | Page number for pagination                                    |
+| limit     | number | 20      | Number of records per page                                    |
 
 **Example Request:**
 
 ```typescript
 const response = await fetch(
-  "https://your-domain.com/api/mobile/requests/money?status=all",
+  "https://your-domain.com/api/mobile/requests/money?status=all&page=1&limit=10",
   {
     method: "GET",
     headers: {
@@ -231,7 +242,14 @@ const response = await fetch(
       "createdAt": "2025-01-14T08:00:00.000Z",
       "processedAt": "2025-01-14T10:00:00.000Z"
     }
-  ]
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "totalCount": 15,
+    "totalPages": 2,
+    "hasMore": true
+  }
 }
 ```
 
@@ -348,6 +366,14 @@ interface ProductInfo {
   price: ProductPrice;
 }
 
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 // ============ Stock Request Types ============
 
 interface StockRequest {
@@ -370,6 +396,7 @@ interface CreateStockRequestBody {
 interface StockRequestsResponse {
   success: true;
   requests: StockRequest[];
+  pagination: PaginationInfo;
 }
 
 interface CreateStockRequestResponse {
@@ -400,6 +427,7 @@ interface CreateMoneyRequestBody {
 interface MoneyRequestsResponse {
   success: true;
   requests: MoneyRequest[];
+  pagination: PaginationInfo;
 }
 
 interface CreateMoneyRequestResponse {
