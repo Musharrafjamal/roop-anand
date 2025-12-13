@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose';
 import dbConnect from '@/lib/mongodb';
-import Sale from '@/models/Sale';
+import Sale, { ISale } from '@/models/Sale';
 import Employee from '@/models/Employee';
 import '@/models/Product';
 import { verifyMobileAuth } from '@/lib/verifyMobileAuth';
@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
 
     // Create sale items
     const saleItems = (items as SaleItemInput[]).map((item) => ({
-      product: item.productId,
+      product: new Types.ObjectId(item.productId),
       productTitle: item.productTitle,
       quantity: item.quantity,
       pricePerUnit: item.pricePerUnit,
@@ -298,7 +298,7 @@ export async function POST(request: NextRequest) {
       },
       paymentMethod,
       totalAmount,
-    });
+    }) as ISale;
 
     // Deduct quantities from employee's products
     for (const item of items) {
