@@ -106,7 +106,7 @@ export function TopEmployeesChart({
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    formatter={(value, name, props) => (
+                    formatter={(value, name, props: any) => (
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="text-slate-600">Sales:</span>

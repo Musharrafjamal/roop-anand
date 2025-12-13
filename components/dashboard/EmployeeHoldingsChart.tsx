@@ -101,8 +101,11 @@ export function EmployeeHoldingsChart({ data }: EmployeeHoldingsChartProps) {
                   content={
                     <ChartTooltipContent
                       formatter={(value, name, props) => {
+                        const typedProps = props as {
+                          payload: { name: string };
+                        };
                         const emp = data.find(
-                          (e) => e.name === props.payload.name
+                          (e) => e.name === typedProps.payload.name
                         );
                         const percentage =
                           totalHoldings > 0
@@ -114,7 +117,7 @@ export function EmployeeHoldingsChart({ data }: EmployeeHoldingsChartProps) {
                         return (
                           <div className="space-y-1">
                             <div className="font-medium text-slate-800">
-                              {props.payload.name}
+                              {typedProps.payload.name}
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-slate-600">Total:</span>

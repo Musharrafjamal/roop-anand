@@ -139,7 +139,7 @@ export function SalesChart({ data, filterLabel, isFiltered }: SalesChartProps) {
                 <ChartTooltipContent
                   formatter={(value, name) => (
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-600">{name}:</span>
+                      {/* <span className="text-slate-600">{name}:</span> */}
                       <span className="font-semibold">
                         {formatCurrency(value as number)}
                       </span>

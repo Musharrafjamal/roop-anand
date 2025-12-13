@@ -121,7 +121,7 @@ export function TopProductsChart({
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    formatter={(value, name, props) => (
+                    formatter={(value, name, props: any) => (
                       <div className="space-y-1">
                         <div className="font-medium text-slate-800">
                           {props.payload.name}
