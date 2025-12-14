@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,11 @@ const navItems = [
     title: "Requests",
     href: "/admin/requests",
     icon: ClipboardList,
+  },
+  {
+    title: "Invoices",
+    href: "/admin/invoices",
+    icon: FileText,
   },
 ];
 
