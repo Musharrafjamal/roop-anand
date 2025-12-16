@@ -13,6 +13,8 @@ import {
   ChevronRight,
   ClipboardList,
   FileText,
+  UserCircle,
+  ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -36,9 +38,19 @@ const navItems = [
     icon: Users,
   },
   {
+    title: "Customers",
+    href: "/admin/customers",
+    icon: UserCircle,
+  },
+  {
     title: "Products",
     href: "/admin/products",
     icon: Package,
+  },
+  {
+    title: "Product Requests",
+    href: "/admin/product-requests",
+    icon: ShoppingCart,
   },
   {
     title: "Sales",
