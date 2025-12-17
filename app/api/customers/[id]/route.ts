@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import connectDB from "@/lib/mongodb";
 import Customer from "@/models/Customer";
 import ProductRequest from "@/models/ProductRequest";
@@ -25,15 +26,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Get customer's request count
-    const requestCount = await ProductRequest.countDocuments({ customer: id });
+    // Get customer's requests
+    const requests = await ProductRequest.find({ customer: id })
+      .populate("products.product", "title photo price")
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({
       success: true,
       customer: {
         ...customer,
-        requestCount,
+        requestCount: requests.length,
       },
+      requests,
     });
   } catch (error) {
     console.error("Error fetching customer:", error);
@@ -46,7 +51,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 /**
  * PUT /api/customers/[id]
- * Update a customer
+ * Update a customer (including password if provided)
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
@@ -54,14 +59,23 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
 
-    // Remove fields that shouldn't be updated directly
-    delete body.password;
-    delete body.deviceId;
-    delete body.authType;
+    // Handle password update separately
+    const updateData: Record<string, unknown> = {};
+
+    // Allow updating these fields
+    if (body.name) updateData.name = body.name;
+    if (body.phone) updateData.phone = body.phone;
+    if (body.email !== undefined) updateData.email = body.email || undefined;
+    if (body.address !== undefined) updateData.address = body.address || undefined;
+
+    // Handle password update with hashing
+    if (body.password && body.password.length >= 6) {
+      updateData.password = await bcrypt.hash(body.password, 10);
+    }
 
     const customer = await Customer.findByIdAndUpdate(
       id,
-      { $set: body },
+      { $set: updateData },
       { new: true, runValidators: true }
     ).select("-password");
 
