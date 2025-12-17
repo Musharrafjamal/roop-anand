@@ -139,6 +139,7 @@ export default function CustomersPage() {
   const [selectedRequest, setSelectedRequest] =
     useState<CustomerRequest | null>(null);
   const [isRequestDetailsOpen, setIsRequestDetailsOpen] = useState(false);
+  const [isUpdatingRequest, setIsUpdatingRequest] = useState(false);
 
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -948,18 +949,96 @@ export default function CustomersPage() {
             {selectedRequest && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                  <span className="text-slate-600">Status</span>
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                      statusConfig[selectedRequest.status].className
-                    }`}
-                  >
-                    {React.createElement(
-                      statusConfig[selectedRequest.status].icon,
-                      { className: "h-3.5 w-3.5" }
-                    )}
-                    {statusConfig[selectedRequest.status].label}
+                  <span className="text-slate-600 font-medium">
+                    Update Status
                   </span>
+                  <Select
+                    value={selectedRequest.status}
+                    onValueChange={async (
+                      value: "pending" | "ongoing" | "delivered"
+                    ) => {
+                      setIsUpdatingRequest(true);
+                      try {
+                        const res = await fetch(
+                          `/api/product-requests/${selectedRequest._id}`,
+                          {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ status: value }),
+                          }
+                        );
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                          toast.success("Request status updated");
+                          setSelectedRequest({
+                            ...selectedRequest,
+                            status: value,
+                            updatedAt: new Date().toISOString(),
+                          });
+                          setCustomerRequests(
+                            customerRequests.map((r) =>
+                              r._id === selectedRequest._id
+                                ? {
+                                    ...r,
+                                    status: value,
+                                    updatedAt: new Date().toISOString(),
+                                  }
+                                : r
+                            )
+                          );
+                        } else {
+                          toast.error(
+                            data.message || "Failed to update status"
+                          );
+                        }
+                      } catch (error) {
+                        console.error("Error updating request:", error);
+                        toast.error("Failed to update status");
+                      } finally {
+                        setIsUpdatingRequest(false);
+                      }
+                    }}
+                    disabled={isUpdatingRequest}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold ${
+                            statusConfig[selectedRequest.status].className
+                          }`}
+                        >
+                          {React.createElement(
+                            statusConfig[selectedRequest.status].icon,
+                            { className: "h-3 w-3" }
+                          )}
+                          {statusConfig[selectedRequest.status].label}
+                        </span>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">
+                        <span className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-amber-600" />
+                          Pending
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="ongoing">
+                        <span className="flex items-center gap-2">
+                          <Truck className="h-4 w-4 text-blue-600" />
+                          Ongoing
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="delivered">
+                        <span className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          Delivered
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {isUpdatingRequest && (
+                    <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                  )}
                 </div>
 
                 <div>
