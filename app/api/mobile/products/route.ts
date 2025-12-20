@@ -47,21 +47,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Transform the products to a cleaner format
-    const products = (employee.products as unknown as PopulatedProduct[]).map((item) => {
-      const product = item.product;
+    // Transform the products to a cleaner format (filter out null products - orphaned references)
+    const products = (employee.products as unknown as PopulatedProduct[])
+      .filter((item) => item.product !== null)
+      .map((item) => {
+        const product = item.product;
 
-      return {
-        _id: product._id.toString(),
-        title: product.title,
-        description: product.description,
-        photo: product.photo,
-        price: product.price,
-        status: product.status,
-        assignedQuantity: item.quantity,
-        assignedAt: item.assignedAt,
-      };
-    });
+        return {
+          _id: product._id.toString(),
+          title: product.title,
+          description: product.description,
+          photo: product.photo,
+          price: product.price,
+          status: product.status,
+          assignedQuantity: item.quantity,
+          assignedAt: item.assignedAt,
+        };
+      });
 
     return NextResponse.json({
       success: true,

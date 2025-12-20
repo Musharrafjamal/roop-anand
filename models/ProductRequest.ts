@@ -12,12 +12,18 @@ export interface ICustomerDetails {
   address?: string;
 }
 
+export interface INote {
+  by: "admin" | "customer";
+  content: string;
+  createdAt: Date;
+}
+
 export interface IProductRequest extends Document {
   customer: Types.ObjectId;
   products: IRequestProduct[];
   status: "pending" | "ongoing" | "delivered";
   customerDetails: ICustomerDetails;
-  notes?: string;
+  notes: INote[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,6 +64,26 @@ const CustomerDetailsSchema = new Schema<ICustomerDetails>(
   { _id: false }
 );
 
+const NoteSchema = new Schema<INote>(
+  {
+    by: {
+      type: String,
+      enum: ["admin", "customer"],
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
 const ProductRequestSchema = new Schema<IProductRequest>(
   {
     customer: {
@@ -85,8 +111,8 @@ const ProductRequestSchema = new Schema<IProductRequest>(
       required: true,
     },
     notes: {
-      type: String,
-      trim: true,
+      type: [NoteSchema],
+      default: [],
     },
   },
   {

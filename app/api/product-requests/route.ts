@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import connectDB from "@/lib/mongodb";
 import ProductRequest from "@/models/ProductRequest";
+// Import models to register schemas for populate
+import "@/models/Customer";
+import "@/models/Product";
 
 /**
  * GET /api/product-requests

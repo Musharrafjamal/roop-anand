@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -17,6 +17,10 @@ import {
   MapPin,
   Phone,
   Mail,
+  MessageSquare,
+  Send,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +62,12 @@ interface ProductInRequest {
   quantity: number;
 }
 
+interface Note {
+  by: "admin" | "customer";
+  content: string;
+  createdAt: string;
+}
+
 interface ProductRequest {
   _id: string;
   customer: {
@@ -75,7 +85,7 @@ interface ProductRequest {
     email?: string;
     address?: string;
   };
-  notes?: string;
+  notes: Note[];
   createdAt: string;
   updatedAt: string;
 }
@@ -130,6 +140,12 @@ export default function ProductRequestsPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [showFilters, setShowFilters] = useState(false);
 
+  // Notes thread states
+  const [newNote, setNewNote] = useState("");
+  const [editingNoteIndex, setEditingNoteIndex] = useState<number | null>(null);
+  const [editingNoteContent, setEditingNoteContent] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
+
   const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
@@ -157,6 +173,26 @@ export default function ProductRequestsPage() {
   useEffect(() => {
     fetchRequests();
   }, [fetchRequests]);
+
+  // Polling for notes when dialog is open
+  useEffect(() => {
+    if (!isDetailsOpen || !selectedRequest) return;
+
+    const pollNotes = async () => {
+      try {
+        const res = await fetch(`/api/product-requests/${selectedRequest._id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSelectedRequest(data.request);
+        }
+      } catch (error) {
+        console.error("Error polling notes:", error);
+      }
+    };
+
+    const intervalId = setInterval(pollNotes, 1000);
+    return () => clearInterval(intervalId);
+  }, [isDetailsOpen, selectedRequest?._id]);
 
   const handleViewDetails = async (request: ProductRequest) => {
     try {
@@ -207,6 +243,72 @@ export default function ProductRequestsPage() {
       }
     } catch (error) {
       console.error("Error deleting request:", error);
+    }
+  };
+
+  // Note handlers
+  const handleAddNote = async () => {
+    if (!selectedRequest || !newNote.trim()) return;
+    setNoteSaving(true);
+    try {
+      const res = await fetch(`/api/product-requests/${selectedRequest._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: newNote.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedRequest(data.request);
+        setNewNote("");
+      }
+    } catch (error) {
+      console.error("Error adding note:", error);
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+
+  const handleUpdateNote = async (noteIndex: number) => {
+    if (!selectedRequest || !editingNoteContent.trim()) return;
+    setNoteSaving(true);
+    try {
+      const res = await fetch(`/api/product-requests/${selectedRequest._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update",
+          noteIndex,
+          content: editingNoteContent.trim(),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedRequest(data.request);
+        setEditingNoteIndex(null);
+        setEditingNoteContent("");
+      }
+    } catch (error) {
+      console.error("Error updating note:", error);
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteIndex: number) => {
+    if (!selectedRequest) return;
+    if (!confirm("Delete this note?")) return;
+    try {
+      const res = await fetch(`/api/product-requests/${selectedRequest._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", noteIndex }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedRequest(data.request);
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
     }
   };
 
@@ -716,15 +818,146 @@ export default function ProductRequestsPage() {
                   </div>
                 </div>
 
-                {/* Notes */}
-                {selectedRequest.notes && (
-                  <div>
-                    <h3 className="font-semibold text-slate-800 mb-2">Notes</h3>
-                    <p className="text-slate-600 bg-slate-50 rounded-lg p-3">
-                      {selectedRequest.notes}
-                    </p>
+                {/* Notes Thread */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <MessageSquare className="h-4 w-4 text-slate-500" />
+                    <h3 className="font-semibold text-slate-800">
+                      Notes Thread
+                    </h3>
+                    <span className="text-xs text-slate-500">
+                      ({selectedRequest.notes?.length || 0} messages)
+                    </span>
                   </div>
-                )}
+
+                  {/* Notes List */}
+                  <div className="space-y-3 mb-3">
+                    {selectedRequest.notes?.length === 0 && (
+                      <p className="text-sm text-slate-400 text-center py-4">
+                        No notes yet. Start the conversation below.
+                      </p>
+                    )}
+                    {selectedRequest.notes?.map((note, index) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg ${
+                          note.by === "admin"
+                            ? "bg-indigo-50 border border-indigo-100 ml-8"
+                            : "bg-slate-50 border border-slate-100 mr-8"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span
+                                className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                                  note.by === "admin"
+                                    ? "bg-indigo-100 text-indigo-700"
+                                    : "bg-slate-200 text-slate-700"
+                                }`}
+                              >
+                                {note.by === "admin" ? "Admin" : "Customer"}
+                              </span>
+                              <span className="text-xs text-slate-400">
+                                {formatDate(note.createdAt)}
+                              </span>
+                            </div>
+                            {editingNoteIndex === index ? (
+                              <div className="flex gap-2 mt-2">
+                                <Input
+                                  value={editingNoteContent}
+                                  onChange={(e) =>
+                                    setEditingNoteContent(e.target.value)
+                                  }
+                                  className="flex-1"
+                                  disabled={noteSaving}
+                                />
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleUpdateNote(index)}
+                                  disabled={noteSaving}
+                                >
+                                  {noteSaving ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    "Save"
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setEditingNoteIndex(null);
+                                    setEditingNoteContent("");
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-slate-700">
+                                {note.content}
+                              </p>
+                            )}
+                          </div>
+                          {note.by === "admin" &&
+                            editingNoteIndex !== index && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => {
+                                    setEditingNoteIndex(index);
+                                    setEditingNoteContent(note.content);
+                                  }}
+                                  className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
+                                  title="Edit note"
+                                >
+                                  <Edit2 className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteNote(index)}
+                                  className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                                  title="Delete note"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Note Input */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Write a note..."
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleAddNote();
+                        }
+                      }}
+                      disabled={noteSaving}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleAddNote}
+                      disabled={!newNote.trim() || noteSaving}
+                      className="gap-2"
+                    >
+                      {noteSaving ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          Send
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
 
                 {/* Timestamps */}
                 <div className="text-sm text-slate-500 pt-4 border-t">

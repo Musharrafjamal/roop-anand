@@ -50,32 +50,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
 
-    // Only allow certain fields to be updated
-    const allowedUpdates: Record<string, unknown> = {};
-
-    if (body.status && ["pending", "ongoing", "delivered"].includes(body.status)) {
-      allowedUpdates.status = body.status;
-    }
-
-    if (body.notes !== undefined) {
-      allowedUpdates.notes = body.notes;
-    }
-
-    if (Object.keys(allowedUpdates).length === 0) {
-      return NextResponse.json(
-        { success: false, message: "No valid fields to update" },
-        { status: 400 }
-      );
-    }
-
-    const productRequest = await ProductRequest.findByIdAndUpdate(
-      id,
-      { $set: allowedUpdates },
-      { new: true, runValidators: true }
-    )
-      .populate("customer", "name email phone authType")
-      .populate("products.product", "title photo price");
-
+    // Find the product request first
+    const productRequest = await ProductRequest.findById(id);
     if (!productRequest) {
       return NextResponse.json(
         { success: false, message: "Product request not found" },
@@ -83,10 +59,48 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    let hasChanges = false;
+
+    // Handle status update
+    if (body.status && ["pending", "ongoing", "delivered"].includes(body.status)) {
+      productRequest.status = body.status;
+      hasChanges = true;
+    }
+
+    // Handle adding a new note
+    if (body.note && typeof body.note === "string" && body.note.trim()) {
+      // Migrate notes to array if it's still a string (old schema)
+      if (!Array.isArray(productRequest.notes)) {
+        productRequest.notes = [];
+      }
+      
+      productRequest.notes.push({
+        by: "admin",
+        content: body.note.trim(),
+        createdAt: new Date(),
+      });
+      hasChanges = true;
+    }
+
+    // Check if there's anything to update
+    if (!hasChanges) {
+      return NextResponse.json(
+        { success: false, message: "No valid fields to update" },
+        { status: 400 }
+      );
+    }
+
+    await productRequest.save();
+
+    // Fetch with populated data for response
+    const updatedRequest = await ProductRequest.findById(id)
+      .populate("customer", "name email phone authType")
+      .populate("products.product", "title photo price");
+
     return NextResponse.json({
       success: true,
       message: "Product request updated successfully",
-      request: productRequest,
+      request: updatedRequest,
     });
   } catch (error) {
     console.error("Error updating product request:", error);
@@ -121,6 +135,87 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error deleting product request:", error);
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PATCH /api/product-requests/[id]
+ * Update or delete individual notes
+ * Body: { action: 'update' | 'delete', noteIndex: number, content?: string }
+ */
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  try {
+    await connectDB();
+    const { id } = await params;
+    const body = await request.json();
+    const { action, noteIndex, content } = body;
+
+    // Validate action
+    if (!action || !["update", "delete"].includes(action)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid action. Use 'update' or 'delete'" },
+        { status: 400 }
+      );
+    }
+
+    // Validate noteIndex
+    if (typeof noteIndex !== "number" || noteIndex < 0) {
+      return NextResponse.json(
+        { success: false, message: "Valid noteIndex is required" },
+        { status: 400 }
+      );
+    }
+
+    // Find the product request
+    const productRequest = await ProductRequest.findById(id);
+    if (!productRequest) {
+      return NextResponse.json(
+        { success: false, message: "Product request not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if noteIndex is valid
+    if (noteIndex >= productRequest.notes.length) {
+      return NextResponse.json(
+        { success: false, message: "Note not found at specified index" },
+        { status: 404 }
+      );
+    }
+
+    if (action === "delete") {
+      // Remove the note at the specified index
+      productRequest.notes.splice(noteIndex, 1);
+    } else if (action === "update") {
+      // Validate content for update
+      if (!content || typeof content !== "string" || !content.trim()) {
+        return NextResponse.json(
+          { success: false, message: "Content is required for update" },
+          { status: 400 }
+        );
+      }
+      // Update the note content
+      productRequest.notes[noteIndex].content = content.trim();
+    }
+
+    await productRequest.save();
+
+    // Fetch with populated data for response
+    const updatedRequest = await ProductRequest.findById(id)
+      .populate("customer", "name email phone authType")
+      .populate("products.product", "title photo price");
+
+    return NextResponse.json({
+      success: true,
+      message: `Note ${action === "delete" ? "deleted" : "updated"} successfully`,
+      request: updatedRequest,
+    });
+  } catch (error) {
+    console.error("Error updating note:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }
