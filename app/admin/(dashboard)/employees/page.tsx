@@ -69,6 +69,7 @@ export default function EmployeesPage() {
     null
   );
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+  const [togglingStatusId, setTogglingStatusId] = useState<string | null>(null);
 
   const fetchEmployees = useCallback(async () => {
     try {
@@ -123,6 +124,7 @@ export default function EmployeesPage() {
 
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "Online" ? "Offline" : "Online";
+    setTogglingStatusId(id);
     try {
       const res = await fetch(`/api/employees/${id}`, {
         method: "PUT",
@@ -134,6 +136,8 @@ export default function EmployeesPage() {
       }
     } catch (error) {
       console.error("Error updating status:", error);
+    } finally {
+      setTogglingStatusId(null);
     }
   };
 
@@ -478,6 +482,7 @@ export default function EmployeesPage() {
                 onDelete={handleDelete}
                 onToggleStatus={handleToggleStatus}
                 onAssignProducts={handleAssignProducts}
+                togglingStatusId={togglingStatusId}
               />
             </motion.div>
           )}

@@ -31,6 +31,7 @@ import {
 } from "@/components/invoices/InvoiceForm";
 import { InvoicePreview } from "@/components/invoices/InvoicePreview";
 import { OrganizationSettingsForm } from "@/components/invoices/OrganizationSettingsForm";
+import { PermissionGate } from "@/components/ui/permission-gate";
 import { toast } from "sonner";
 
 type StatusFilter = "all" | "Draft" | "Sent" | "Paid" | "Overdue";
@@ -212,14 +213,16 @@ export default function InvoicesPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setIsSettingsOpen(true)}
-              className="gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Organization</span>
-            </Button>
+            <PermissionGate module="invoices" action="orgSettings">
+              <Button
+                variant="outline"
+                onClick={() => setIsSettingsOpen(true)}
+                className="gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Organization</span>
+              </Button>
+            </PermissionGate>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 onClick={handleCreate}

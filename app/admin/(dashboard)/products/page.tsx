@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { ProductForm } from "@/components/products/ProductForm";
 import { ProductTable } from "@/components/products/ProductTable";
+import { PermissionGate } from "@/components/ui/permission-gate";
 
 interface Product {
   _id: string;
@@ -286,15 +287,17 @@ export default function StockPage() {
               )}
             </div>
           </div>
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={handleCreate}
-              className="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all"
-            >
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </motion.div>
+          <PermissionGate module="products" action="create">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={handleCreate}
+                className="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all"
+              >
+                <Plus className="h-4 w-4" />
+                Add Product
+              </Button>
+            </motion.div>
+          </PermissionGate>
         </motion.div>
 
         {/* Search and Filters */}
@@ -493,13 +496,15 @@ export default function StockPage() {
               <p className="text-slate-400 text-sm mb-4">
                 Get started by adding your first product
               </p>
-              <Button
-                onClick={handleCreate}
-                className="gap-2 bg-indigo-600 hover:bg-indigo-700"
-              >
-                <Plus className="h-4 w-4" />
-                Add Product
-              </Button>
+              <PermissionGate module="products" action="create">
+                <Button
+                  onClick={handleCreate}
+                  className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Product
+                </Button>
+              </PermissionGate>
             </motion.div>
           ) : (
             <motion.div

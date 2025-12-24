@@ -39,6 +39,7 @@ import {
   ImageOff,
   Filter,
 } from "lucide-react";
+import { PermissionGate } from "@/components/ui/permission-gate";
 
 interface Employee {
   _id: string;
@@ -551,30 +552,40 @@ export default function RequestsPage() {
                               </div>
                               {request.status === "Pending" && (
                                 <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    className="gap-1 bg-green-600 hover:bg-green-700"
-                                    onClick={() =>
-                                      handleApprove(request._id, "stock")
-                                    }
+                                  <PermissionGate
+                                    module="requests"
+                                    action="approve"
                                   >
-                                    <Check className="h-4 w-4" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1 border-red-300 text-red-600 hover:bg-red-50"
-                                    onClick={() =>
-                                      setRejectingRequest({
-                                        id: request._id,
-                                        type: "stock",
-                                      })
-                                    }
+                                    <Button
+                                      size="sm"
+                                      className="gap-1 bg-green-600 hover:bg-green-700"
+                                      onClick={() =>
+                                        handleApprove(request._id, "stock")
+                                      }
+                                    >
+                                      <Check className="h-4 w-4" />
+                                      Approve
+                                    </Button>
+                                  </PermissionGate>
+                                  <PermissionGate
+                                    module="requests"
+                                    action="reject"
                                   >
-                                    <X className="h-4 w-4" />
-                                    Reject
-                                  </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="gap-1 border-red-300 text-red-600 hover:bg-red-50"
+                                      onClick={() =>
+                                        setRejectingRequest({
+                                          id: request._id,
+                                          type: "stock",
+                                        })
+                                      }
+                                    >
+                                      <X className="h-4 w-4" />
+                                      Reject
+                                    </Button>
+                                  </PermissionGate>
                                 </div>
                               )}
                             </div>
@@ -669,30 +680,40 @@ export default function RequestsPage() {
                               </div>
                               {request.status === "Pending" && (
                                 <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    className="gap-1 bg-green-600 hover:bg-green-700"
-                                    onClick={() =>
-                                      handleApprove(request._id, "money")
-                                    }
+                                  <PermissionGate
+                                    module="requests"
+                                    action="approve"
                                   >
-                                    <Check className="h-4 w-4" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1 border-red-300 text-red-600 hover:bg-red-50"
-                                    onClick={() =>
-                                      setRejectingRequest({
-                                        id: request._id,
-                                        type: "money",
-                                      })
-                                    }
+                                    <Button
+                                      size="sm"
+                                      className="gap-1 bg-green-600 hover:bg-green-700"
+                                      onClick={() =>
+                                        handleApprove(request._id, "money")
+                                      }
+                                    >
+                                      <Check className="h-4 w-4" />
+                                      Approve
+                                    </Button>
+                                  </PermissionGate>
+                                  <PermissionGate
+                                    module="requests"
+                                    action="reject"
                                   >
-                                    <X className="h-4 w-4" />
-                                    Reject
-                                  </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="gap-1 border-red-300 text-red-600 hover:bg-red-50"
+                                      onClick={() =>
+                                        setRejectingRequest({
+                                          id: request._id,
+                                          type: "money",
+                                        })
+                                      }
+                                    >
+                                      <X className="h-4 w-4" />
+                                      Reject
+                                    </Button>
+                                  </PermissionGate>
                                 </div>
                               )}
                             </div>

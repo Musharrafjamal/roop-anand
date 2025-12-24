@@ -26,6 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
+import { PermissionGate } from "@/components/ui/permission-gate";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export interface Invoice {
   _id: string;
@@ -78,6 +80,8 @@ export function InvoiceList({
   onEdit,
   onDelete,
 }: InvoiceListProps) {
+  const { can } = usePermissions();
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -192,17 +196,21 @@ export function InvoiceList({
                       <Eye className="h-4 w-4 mr-2" />
                       View
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit(invoice)}>
-                      <Edit2 className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onDelete(invoice._id)}
-                      className="text-red-600 focus:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
+                    {can("invoices", "update") && (
+                      <DropdownMenuItem onClick={() => onEdit(invoice)}>
+                        <Edit2 className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                    )}
+                    {can("invoices", "delete") && (
+                      <DropdownMenuItem
+                        onClick={() => onDelete(invoice._id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

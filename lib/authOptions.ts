@@ -4,6 +4,8 @@ import dbConnect from "@/lib/mongodb";
 import Admin from "@/models/Admin";
 import { comparePassword } from "@/lib/auth";
 import { seedAdmin } from "@/lib/seedAdmin";
+import { SUPER_ADMIN_PERMISSIONS } from "@/lib/permissions";
+import { Permissions, AdminRole } from "@/types/permissions";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -32,6 +34,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid email or password");
         }
 
+        // Check if admin is active
+        if (admin.isActive === false) {
+          throw new Error("Account is deactivated");
+        }
+
         // Compare passwords
         const isPasswordValid = await comparePassword(
           credentials.password,
@@ -42,10 +49,13 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid email or password");
         }
 
+        // Return user with role and permissions
         return {
           id: admin._id.toString(),
           email: admin.email,
-          name: "Admin",
+          name: admin.name || "Admin",
+          role: (admin.role || 'super-admin') as AdminRole,
+          permissions: (admin.permissions || SUPER_ADMIN_PERMISSIONS) as Permissions,
         };
       },
     }),
@@ -59,17 +69,30 @@ export const authOptions: NextAuthOptions = {
     error: "/admin/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        token.name = user.name;
+        token.role = user.role;
+        token.permissions = user.permissions;
       }
+      
+      // Handle session update (e.g., when permissions change)
+      if (trigger === "update" && session) {
+        token.role = session.role;
+        token.permissions = session.permissions;
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        session.user.role = token.role as AdminRole;
+        session.user.permissions = token.permissions as Permissions;
       }
       return session;
     },

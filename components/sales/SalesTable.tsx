@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
+import { PermissionGate } from "@/components/ui/permission-gate";
 
 interface SaleItem {
   product: {
@@ -217,19 +218,21 @@ export function SalesTable({ sales, onView, onDelete }: SalesTableProps) {
                       <Eye className="h-4 w-4" />
                     </Button>
                   </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(sale._id)}
-                      className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                  <PermissionGate module="sales" action="delete">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(sale._id)}
+                        className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  </PermissionGate>
                 </div>
               </TableCell>
             </motion.tr>

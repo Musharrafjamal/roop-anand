@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Users,
@@ -15,68 +15,88 @@ import {
   FileText,
   UserCircle,
   ShoppingCart,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionModule } from "@/types/permissions";
 
 interface SidebarProps {
   className?: string;
 }
 
-const navItems = [
+interface NavItem {
+  title: string;
+  href: string;
+  icon: React.ElementType;
+  module: PermissionModule;
+}
+
+const navItems: NavItem[] = [
   {
     title: "Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
+    module: "dashboard",
   },
   {
     title: "Employees",
     href: "/admin/employees",
     icon: Users,
+    module: "employees",
   },
   {
     title: "Customers",
     href: "/admin/customers",
     icon: UserCircle,
+    module: "customers",
   },
   {
     title: "Products",
     href: "/admin/products",
     icon: Package,
+    module: "products",
   },
   {
     title: "Product Requests",
     href: "/admin/product-requests",
     icon: ShoppingCart,
+    module: "productRequests",
   },
   {
     title: "Sales",
     href: "/admin/sales",
     icon: FileBarChart,
+    module: "sales",
   },
   {
     title: "Requests",
     href: "/admin/requests",
     icon: ClipboardList,
+    module: "requests",
   },
   {
     title: "Invoices",
     href: "/admin/invoices",
     icon: FileText,
+    module: "invoices",
   },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
-  const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
+  const { canAccess, isSuperAdmin, role, isLoading } = usePermissions();
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/admin/login" });
   };
+
+  // Filter nav items based on permissions
+  const visibleNavItems = navItems.filter((item) => canAccess(item.module));
 
   return (
     <div
@@ -112,42 +132,59 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-indigo-50 text-indigo-600"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              )}
-            >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{item.title}</span>}
-            </Link>
-          );
-        })}
+        {!isLoading &&
+          visibleNavItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                )}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                {!collapsed && <span>{item.title}</span>}
+              </Link>
+            );
+          })}
+
+        {/* Admin Management - Super Admin Only */}
+        {!isLoading && isSuperAdmin() && (
+          <Link
+            href="/admin/admins"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              pathname === "/admin/admins"
+                ? "bg-indigo-50 text-indigo-600"
+                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            )}
+          >
+            <Shield className="h-5 w-5 shrink-0" />
+            {!collapsed && <span>Admins</span>}
+          </Link>
+        )}
       </nav>
 
       {/* Footer */}
       <div className="p-2 border-t border-neutral-200">
         {/* User Info */}
-        {!collapsed && session?.user && (
+        {!collapsed && !isLoading && (
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-indigo-100 text-indigo-600 text-xs">
-                {session.user.email?.charAt(0).toUpperCase() || "A"}
+                {isSuperAdmin() ? "SA" : "A"}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-800 truncate">
-                Admin
+                {isSuperAdmin() ? "Super Admin" : "Sub Admin"}
               </p>
               <p className="text-xs text-slate-500 truncate">
-                {session.user.email}
+                {role === "super-admin" ? "Full Access" : "Limited Access"}
               </p>
             </div>
           </div>

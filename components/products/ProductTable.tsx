@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
+import { PermissionGate } from "@/components/ui/permission-gate";
 
 interface Product {
   _id: string;
@@ -144,25 +145,48 @@ export function ProductTable({
                 </div>
               </TableCell>
               <TableCell>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onToggleStatus(product._id, product.status)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
-                    product.status === "Active"
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
+                <PermissionGate
+                  module="products"
+                  action="toggleStatus"
+                  fallback={
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                        product.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          product.status === "Active"
+                            ? "bg-green-500"
+                            : "bg-slate-400"
+                        }`}
+                      />
+                      {product.status}
+                    </span>
+                  }
                 >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onToggleStatus(product._id, product.status)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
                       product.status === "Active"
-                        ? "bg-green-500"
-                        : "bg-slate-400"
+                        ? "bg-green-100 text-green-700 hover:bg-green-200"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
-                  />
-                  {product.status}
-                </motion.button>
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        product.status === "Active"
+                          ? "bg-green-500"
+                          : "bg-slate-400"
+                      }`}
+                    />
+                    {product.status}
+                  </motion.button>
+                </PermissionGate>
               </TableCell>
               <TableCell className="hidden md:table-cell text-slate-600 font-medium">
                 {formatCurrency(product.price.base)}
@@ -188,32 +212,36 @@ export function ProductTable({
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(product)}
-                      className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                  <PermissionGate module="products" action="update">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(product._id)}
-                      className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(product)}
+                        className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  </PermissionGate>
+                  <PermissionGate module="products" action="delete">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(product._id)}
+                        className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  </PermissionGate>
                 </div>
               </TableCell>
             </motion.tr>

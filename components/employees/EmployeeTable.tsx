@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, User, Package, Eye } from "lucide-react";
+import { Pencil, Trash2, User, Package, Eye, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +15,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
+import { PermissionGate } from "@/components/ui/permission-gate";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface EmployeeProduct {
   _id: string;
@@ -43,6 +50,7 @@ interface EmployeeTableProps {
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, currentStatus: string) => void;
   onAssignProducts: (employee: Employee) => void;
+  togglingStatusId?: string | null;
 }
 
 export function EmployeeTable({
@@ -51,6 +59,7 @@ export function EmployeeTable({
   onDelete,
   onToggleStatus,
   onAssignProducts,
+  togglingStatusId,
 }: EmployeeTableProps) {
   if (employees.length === 0) {
     return (
@@ -141,25 +150,67 @@ export function EmployeeTable({
                 {employee.fullName}
               </TableCell>
               <TableCell>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onToggleStatus(employee._id, employee.status)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
-                    employee.status === "Online"
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
+                <PermissionGate
+                  module="employees"
+                  action="toggleStatus"
+                  fallback={
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                        employee.status === "Online"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          employee.status === "Online"
+                            ? "bg-green-500"
+                            : "bg-slate-400"
+                        }`}
+                      />
+                      {employee.status}
+                    </span>
+                  }
                 >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      employee.status === "Online"
-                        ? "bg-green-500"
-                        : "bg-slate-400"
-                    }`}
-                  />
-                  {employee.status}
-                </motion.button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() =>
+                            onToggleStatus(employee._id, employee.status)
+                          }
+                          disabled={togglingStatusId === employee._id}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-wait ${
+                            employee.status === "Online"
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          }`}
+                        >
+                          {togglingStatusId === employee._id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                employee.status === "Online"
+                                  ? "bg-green-500"
+                                  : "bg-slate-400"
+                              }`}
+                            />
+                          )}
+                          {employee.status}
+                        </motion.button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          Click to set{" "}
+                          {employee.status === "Online" ? "Offline" : "Online"}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </PermissionGate>
               </TableCell>
               <TableCell className="text-slate-600">
                 {employee.phoneNumber}
@@ -168,15 +219,29 @@ export function EmployeeTable({
                 {employee.email || "—"}
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onAssignProducts(employee)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 cursor-pointer transition-colors"
+                <PermissionGate module="employees" action="assignProducts">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onAssignProducts(employee)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 cursor-pointer transition-colors"
+                  >
+                    <Package className="h-3 w-3" />
+                    {employee.products?.length || 0} items
+                  </motion.button>
+                </PermissionGate>
+                <PermissionGate
+                  module="employees"
+                  action="assignProducts"
+                  fallback={
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                      <Package className="h-3 w-3" />
+                      {employee.products?.length || 0} items
+                    </span>
+                  }
                 >
-                  <Package className="h-3 w-3" />
-                  {employee.products?.length || 0} items
-                </motion.button>
+                  <></>
+                </PermissionGate>
               </TableCell>
               <TableCell className="hidden lg:table-cell text-slate-500">
                 {format(new Date(employee.dateOfJoining), "MMM d, yyyy")}
@@ -198,46 +263,52 @@ export function EmployeeTable({
                       </Button>
                     </Link>
                   </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onAssignProducts(employee)}
-                      title="Assign products"
-                      className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                  <PermissionGate module="employees" action="assignProducts">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <Package className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(employee)}
-                      className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onAssignProducts(employee)}
+                        title="Assign products"
+                        className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                      >
+                        <Package className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  </PermissionGate>
+                  <PermissionGate module="employees" action="update">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(employee._id)}
-                      className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(employee)}
+                        className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  </PermissionGate>
+                  <PermissionGate module="employees" action="delete">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(employee._id)}
+                        className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  </PermissionGate>
                 </div>
               </TableCell>
             </motion.tr>
