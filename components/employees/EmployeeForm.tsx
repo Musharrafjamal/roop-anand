@@ -370,7 +370,7 @@ export function EmployeeForm({
 
       {/* Phone Number */}
       <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="phoneNumber">Phone Number * (Used for login)</Label>
+        <Label htmlFor="phoneNumber">Phone Number *</Label>
         <Input
           id="phoneNumber"
           value={formData.phoneNumber}
@@ -383,13 +383,14 @@ export function EmployeeForm({
 
       {/* Email */}
       <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="email">Email Address (Optional)</Label>
+        <Label htmlFor="email">Email Address * (Used for login)</Label>
         <Input
           id="email"
           type="email"
           value={formData.email}
           onChange={(e) => handleChange("email", e.target.value)}
           placeholder="Enter email address"
+          required
           className="transition-all focus:ring-2 focus:ring-indigo-200"
         />
       </motion.div>
