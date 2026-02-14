@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (!products || !Array.isArray(products) || products.length === 0) {
       return NextResponse.json(
         { success: false, message: "At least one product is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -35,8 +35,11 @@ export async function POST(request: NextRequest) {
     for (const item of products) {
       if (!item.product || !item.quantity || item.quantity < 1) {
         return NextResponse.json(
-          { success: false, message: "Each product must have valid product ID and quantity" },
-          { status: 400 }
+          {
+            success: false,
+            message: "Each product must have valid product ID and quantity",
+          },
+          { status: 400 },
         );
       }
 
@@ -48,8 +51,11 @@ export async function POST(request: NextRequest) {
 
       if (!productExists) {
         return NextResponse.json(
-          { success: false, message: `Product ${item.product} not found or inactive` },
-          { status: 400 }
+          {
+            success: false,
+            message: `Product ${item.product} not found or inactive`,
+          },
+          { status: 400 },
         );
       }
     }
@@ -59,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!customer) {
       return NextResponse.json(
         { success: false, message: "Customer not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -75,7 +81,7 @@ export async function POST(request: NextRequest) {
     if (!customerDetails.name || !customerDetails.phone) {
       return NextResponse.json(
         { success: false, message: "Name and phone are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -117,7 +123,7 @@ export async function POST(request: NextRequest) {
     console.error("Error submitting request:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -166,15 +172,18 @@ export async function GET(request: NextRequest) {
     // Format requests
     const formattedRequests = requests.map((req) => ({
       id: req._id,
-      products: req.products.map((item) => ({
-        product: {
-          id: (item.product as unknown as { _id: string })._id,
-          title: (item.product as unknown as { title: string }).title,
-          photo: (item.product as unknown as { photo?: string }).photo,
-          price: (item.product as unknown as { price: { base: number } }).price?.base,
-        },
-        quantity: item.quantity,
-      })),
+      products: req.products
+        .filter((item) => item.product != null)
+        .map((item) => ({
+          product: {
+            id: (item.product as unknown as { _id: string })._id,
+            title: (item.product as unknown as { title: string }).title,
+            photo: (item.product as unknown as { photo?: string }).photo,
+            price: (item.product as unknown as { price: { base: number } })
+              .price?.base,
+          },
+          quantity: item.quantity,
+        })),
       status: req.status,
       customerDetails: req.customerDetails,
       notes: req.notes,
@@ -197,7 +206,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching requests:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
